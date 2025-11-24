@@ -42,3 +42,10 @@ JOIN cards ON esd.card_id = cards.card_code
                   AND (time_stamp + INTERVAL '7 hours') < '2025-11-05 12:30:00.00 +00:00'
 AND check_in = true
 ORDER BY formatted_time
+-- Đếm tổng theo thời gian
+SELECT esd.*
+FROM event_scan_data esd
+                join cards on esd.card_id = cards.card_code
+                WHERE (time_stamp + INTERVAL '7 hours') >= '2025-11-06 18:30:00.00 +00:00'
+                  AND (time_stamp + INTERVAL '7 hours') < '2025-11-06 18:40:00.00 +00:00'
+                  AND check_in = false;
