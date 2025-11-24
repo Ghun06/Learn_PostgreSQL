@@ -26,3 +26,19 @@ SELECT block_10m, SLXeVaoTruong,
        TO_CHAR(block_10m, 'HH24:MI:SS') AS formatted_time,
        DATE(block_10m + INTERVAL '7 hours') As Date
 FROM facttb;
+
+-- tìm log ra vào theo khung giờ
+SELECT
+    TO_CHAR(esd.created_at + INTERVAL '7 hours', 'HH24:MI:SS DD/MM/YYYY') AS formatted_time,
+    DATE(esd.created_at + INTERVAL '7 hours') As Date,
+    card_id,
+    check_in,
+    esd.user_id,
+    plate_number
+FROM
+    event_scan_data esd
+JOIN cards ON esd.card_id = cards.card_code
+    WHERE (time_stamp + INTERVAL '7 hours') >= '2025-11-05 05:40:00.00 +00:00'
+                  AND (time_stamp + INTERVAL '7 hours') < '2025-11-05 12:30:00.00 +00:00'
+AND check_in = true
+ORDER BY formatted_time
