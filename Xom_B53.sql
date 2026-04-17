@@ -9,3 +9,16 @@ FROM (
 ) t
 WHERE rnk = 2
 ORDER BY departments, full_name
+
+-- Học sinh đạt điểm >= 8 ở tất cả môn
+
+```sql
+SELECT 
+    ps.id AS student_id,
+    ps.name,
+    ps.classes,
+    COUNT(ss.mon) AS subject_count
+FROM pupils ps
+JOIN scores ss ON ps.id = ss.student_id
+GROUP BY ps.id, ps.name, ps.classes
+HAVING COUNT(ss.mon) = COUNT(CASE WHEN ss.scores >= 8 THEN 1 END);
