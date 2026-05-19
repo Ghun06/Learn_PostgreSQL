@@ -27,3 +27,15 @@ FROM logs
 GROUP BY module
 HAVING COUNT(*) >= 5
 ORDER BY error_rate DESC;
+
+--B76 Thời gian giao hàng trung bình theo khu vực
+
+```sql
+SELECT region, count(*) AS order_count, 
+       ROUND(avg(julianday(delivery_date) - julianday(order_date)), 1) AS avg_delivery_days, 
+       MIN(julianday(delivery_date) - julianday(order_date)) AS min_delivery_date,
+       MAX(julianday(delivery_date) - julianday(order_date)) AS max_delivery_date 
+FROM orders
+WHERE delivery_date IS NOT NULL
+GROUP BY region
+ORDER BY avg_delivery_days ASC
