@@ -1,0 +1,59 @@
+#
+Technique: Interval merge via running MAX(end_at) + cumulative new-group flag — gộp các đoạn thời gian chồng lấp thành đoạn liên tục duy nhất.
+
+Hệ thống đặt phòng cần biết phòng nào "bị chiếm" trong những khoảng nào. Hai booking chồng lấp (start ≤ end của booking liền trước cùng phòng) phải được gộp thành 1 khoảng duy nhất.
+
+Yêu cầu:
+
+Cột trả về: room_id, merged_start (đầu khoảng), merged_end (cuối khoảng), n_bookings (số booking gốc gộp vào), duration_min (phút giữa start-end, làm tròn xuống số nguyên).
+Hai booking gối đầu (start_at_2 = end_at_1) cũng coi là chồng lấp → gộp.
+Sắp xếp: room_id tăng dần, merged_start tăng dần.
+#
+
+```sql
+WITH
+ordered AS (
+    SELECT
+        id,
+        room_id,
+        start_at,
+        end_at,
+        MAX(end_at) OVER (
+            PARTITION BY room_id
+            ORDER BY start_at, end_at
+            ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+        ) AS max_end_before
+    FROM bookings
+),
+
+flagged AS (
+    SELECT
+        *,
+        CASE
+            WHEN max_end_before IS NULL        THEN 1  
+            WHEN start_at > max_end_before     THEN 1  
+            ELSE                                    0
+        END AS new_group_flag
+    FROM ordered
+),
+
+grouped AS (
+    SELECT
+        *,
+        SUM(new_group_flag) OVER (
+            PARTITION BY room_id
+            ORDER BY start_at, end_at
+            ROWS UNBOUNDED PRECEDING
+        ) AS group_id
+    FROM flagged
+)
+
+SELECT
+    room_id,
+    MIN(start_at)  AS merged_start,
+    MAX(end_at)    AS merged_end,
+    COUNT(*)       AS n_bookings,
+    (strftime('%s', MAX(end_at)) - strftime('%s', MIN(start_at))) / 60 AS duration_min
+FROM grouped
+GROUP BY room_id, group_id
+ORDER BY room_id, merged_start;
