@@ -40,3 +40,17 @@ LEFT JOIN dept_salary ds ON d.id = ds.dept_id
 LEFT JOIN dept_project dp ON d.id = dp.dept_id
 WHERE COALESCE(ds.total_salary, 0) + COALESCE(dp.total_project_cost, 0) > d.budget
 ORDER BY over_budget DESC;
+
+-- 
+Kho cần theo dõi số dư sau mỗi giao dịch (nhập/xuất) theo từng SKU và thời gian, không thể tính lại từ đầu mỗi lần.
+Yêu cầu:
+Cột trả về: sku, occurred_at, type (IN/OUT), quantity, running_balance (số dư tích lũy sau giao dịch này, IN cộng OUT trừ).
+Sắp xếp: sku tăng dần, occurred_at tăng dần
+--
+    
+SELECT sku, occurred_at, type, quantity,
+    SUM(CASE WHEN type = 'IN' THEN quantity ELSE -quantity END) 
+    OVER(PARTITION BY sku ORDER BY occurred_at, type ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+    AS running_balance
+FROM inventory_movements
+ORDER BY sku, occurred_at;
