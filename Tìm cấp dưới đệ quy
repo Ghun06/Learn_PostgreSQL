@@ -1,0 +1,28 @@
+Yêu cầu
+Cột trả về: id, full_name, level
+Điều kiện filter: tất cả nhân viên thuộc nhánh dưới manager có id = 1 (loại bản thân manager)
+level = 1 cho cấp trực tiếp (manager_id = 1), level = 2 cho cấp dưới của cấp dưới, v.v.
+Sắp xếp: theo level tăng dần, sau đó id tăng dần
+Edge case: query phải hoạt động với mọi hình dạng cây (số cấp, fan-out, branch độc lập khác nhau giữa các testcase)
+
+```sql
+WITH RECURSIVE subordinates AS (
+    -- Anchor: cấp trực tiếp dưới manager id=1
+    SELECT
+        id,
+        full_name,
+        1 AS level
+    FROM employees
+    WHERE manager_id = 1
+    UNION ALL
+    -- Recursive: mở rộng xuống các cấp tiếp theo
+    SELECT
+        e.id,
+        e.full_name,
+        s.level + 1 AS level
+    FROM employees e
+    INNER JOIN subordinates s ON e.manager_id = s.id
+)
+SELECT id, full_name, level
+FROM subordinates
+ORDER BY level ASC, id ASC;
